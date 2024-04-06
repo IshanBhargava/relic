@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import data from "../data/data.json";
+import {manu_model} from "../interface/ManuModel"
 
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -8,15 +11,12 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
 import Chip from "@mui/material/Chip";
 import Button from "@mui/material/Button";
-import SearchIcon from '@mui/icons-material/Search';
-
-interface manu_model {
-    manufacturer: string;
-    models: string[];
-}
+import SearchIcon from "@mui/icons-material/Search";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -30,13 +30,24 @@ const MenuProps = {
 };
 
 const Home = () => {
+    const navigate = useNavigate();
     const [manmodel, setManmodel] = useState<manu_model[]>([]);
     const [selectedManufacturer, setSelectedManufacturer] = useState<string[]>([]);
     const [selectedModel, setSelectedModel] = useState<string[]>([]);
     const [availableModel, setAvailableModel] = useState<string[]>([]);
+    const [lat, setLat] = useState(0);
+    const [long, setLong] = useState(0);
+    const [distance, setDistance] = useState<string>("");
+
+    const dist_range = ["50", "100", "150"];
 
     useEffect(() => {
         setManmodel(data["manumodel"]);
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            setLat(position.coords.latitude);
+            setLong(position.coords.longitude);
+        });
     }, []);
 
     const handleChange = async (event: any) => {
@@ -52,44 +63,54 @@ const Home = () => {
     const handleAvailableModels = (sm: string[]) => {
         let am: string[] = [];
 
-        manmodel.filter(item => sm.includes(item.manufacturer))
-        .map(item => {
-            item.models.forEach(item => am.push(item));
-            return item;
-        });
-        setAvailableModel(am);
-    }
-
-    const handleModelChange = (event: any) => {
-        const {
-            target: { value },
-        } = event;
-        setSelectedModel(
-            typeof value === "string" ? value.split(",") : value
-        );
+        manmodel
+            .filter((item) => sm.includes(item.manufacturer))
+            .map((item) => {
+                item.models.forEach((item) => am.push(item));
+                return item;
+            });
+        setAvailableModel(am.sort());
     };
 
-    const test = () => {
-        // console.log(selectedManufacturer);
-        // console.log(selectedModel);
-        navigator.geolocation.getCurrentPosition((position) => {
-            console.log('Lat')
-            console.log(position.coords.latitude)
-            console.log('Long')
-            console.log(position.coords.longitude)
-        });
+    const handleModelChange = (event: any, data: any) => {
+        setSelectedModel(typeof data === "string" ? data.split(",") : data)
+    };
+
+    const submit = () => {
+        if (
+            selectedManufacturer.length !== 0 &&
+            lat !== 0 &&
+            long !== 0 &&
+            distance.length !== 0
+        ) {
+            const options = {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    manufacturer: selectedManufacturer,
+                    model: selectedModel,
+                    dist_range: distance,
+                    lat: lat,
+                    long: long,
+                }),
+            };
+            console.log(options);
+            navigate('/searched', {state: options})
+        } else {
+            alert(
+                "Please fill all the values and allow location if you haven't"
+            );
+        }
     };
 
     return (
         <div id="home" className="flex flex-col h-5/6">
-            <div
-                id="content"
-                className="text-white flex justify-center items-center"
-            >
-                <div className="m-10">
+            <div id="content" className="flex justify-center items-center">
+                <div className="m-40">
                     <Card>
-                        <CardContent className="bg-[#e4ede9] h-34">
+                        <CardContent className="bg-[#e4ede9] h-34 flex flex-row">
                             <FormControl
+                                required
                                 id="make-select"
                                 sx={{ m: 1, width: 300 }}
                                 className="bg-white"
@@ -136,52 +157,66 @@ const Home = () => {
                                     ))}
                                 </Select>
                             </FormControl>
-                            <FormControl id="model-select" sx={{ m: 1, width: 300 }} className="bg-white">
-                                <InputLabel id="model-chip-label">
-                                    Make
+                            <Autocomplete
+                                freeSolo
+                                multiple
+                                id="model-autocomplete"
+                                disabled={selectedManufacturer.length === 0}
+                                onChange={(event, data): any => {
+                                    handleModelChange(event, data)
+                                } }
+                                sx={{ m: 1, width: 300 }}
+                                className="bg-white"
+                                options={availableModel.map(
+                                    (model) => model
+                                )}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Model"
+                                        InputProps={{
+                                            ...params.InputProps,
+                                            type: "search",
+                                        }}
+                                    />
+                                )}
+                            />
+                            <FormControl
+                                required
+                                id="distance-select"
+                                sx={{ m: 1, width: 300 }}
+                                className="bg-white"
+                            >
+                                <InputLabel id="distance-select-label">
+                                    Distance
                                 </InputLabel>
                                 <Select
-                                    id="make-chip"
-                                    multiple
-                                    value={selectedModel}
-                                    disabled={selectedManufacturer.length === 0}
-                                    onChange={handleModelChange}
-                                    input={
-                                        <OutlinedInput
-                                            id="select-multiple-model-chip"
-                                            label="Chip"
-                                        />
-                                    }
-                                    renderValue={(selected) => (
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                flexWrap: "wrap",
-                                                gap: 0.5,
-                                            }}
-                                        >
-                                            {selected.map((value) => (
-                                                <Chip
-                                                    key={value}
-                                                    label={value}
-                                                />
-                                            ))}
-                                        </Box>
-                                    )}
+                                    labelId="distance-select-label"
+                                    id="distance-select"
+                                    value={distance.toString()}
+                                    label="distance"
+                                    onChange={(event: SelectChangeEvent) => {
+                                        setDistance(event.target.value);
+                                    }}
                                     MenuProps={MenuProps}
                                 >
-                                    {
-                                        availableModel.map((model) => (
-                                            <MenuItem key={model} value={model}>
-                                                {model}
-                                            </MenuItem>
-                                        ))
-                                    }
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {dist_range.map((d) => (
+                                        <MenuItem key={d} value={d}>
+                                            {d}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
-                            <FormControl id="model-select" sx={{ m: 1}}>
-                                <Button onClick={test} variant="contained" className="m-1 h-14">
-                                    <SearchIcon className="pr-2"/> Search
+                            <FormControl id="model-select" sx={{ m: 1 }}>
+                                <Button
+                                    onClick={submit}
+                                    variant="contained"
+                                    className="m-1 h-14"
+                                >
+                                    <SearchIcon className="pr-2" /> Search
                                 </Button>
                             </FormControl>
                         </CardContent>
