@@ -164,7 +164,7 @@ const Home = () => {
                                 disabled={selectedManufacturer.length === 0}
                                 onChange={(event, data): any => {
                                     handleModelChange(event, data)
-                                } }
+                                }}
                                 sx={{ m: 1, width: 300 }}
                                 className="bg-white"
                                 options={availableModel.map(
