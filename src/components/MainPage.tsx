@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import CarMap from "./CarMap.js";
+import CarMap from "./CarMap";
+import CarModal from "./CarModal";
 
 import manModelData from "../data/data.json";
-
+import { carData } from "../interface/CarData";
 import { manu_model } from "../interface/ManuModel";
+
 import Box from "@mui/material/Box";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import InputLabel from "@mui/material/InputLabel";
@@ -44,20 +46,10 @@ const Item = styled(Paper)(({ theme }) => ({
     textAlign: "center",
 }));
 
-const modalStyle = {
-    position: "absolute" as "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: 400,
-    bgcolor: "background.paper",
-    boxShadow: 24,
-};
-
 const MainPage = () => {
     const apiOptions = useLocation().state
 
-    const  [data, setData] = useState<any[]>();
+    const  [data, setData] = useState<carData[]>();
     const  [isPending, setIsPending] = useState<Boolean>(true);
 
 
@@ -78,12 +70,13 @@ const MainPage = () => {
     const [mileageOpen, setMileageOpen] = useState(false);
 
     const [modalOpen, setModalOpen] = useState(false);
-    const [modalData, setModalData] = useState<any>();
+    const [modalData, setModalData] = useState<carData>();
 
     const dist_range = ["50", "100", "150"];
 
     
     useEffect(() => {
+        console.log('apiOptions', apiOptions)
         fetch("http://127.0.0.1:5000/getcars", apiOptions)
             .then((res) => {
                 if (!res.ok) {
@@ -97,7 +90,7 @@ const MainPage = () => {
             })
 
         setManmodel(manModelData!["manumodel"]);
-    }, []);
+    }, [apiOptions]);
 
     const handleChange = async (event: any) => {
         const {
@@ -490,9 +483,13 @@ const MainPage = () => {
             <Grid container columns={16}>
                     <Grid xs={8} sx={{ height: "full" }}>
                         <Item>
-                            <div className="m-2">
-                                {/* <CarMap carData={searchData} userLoc={[JSON.parse(receivedOptions['body']).lat, JSON.parse(receivedOptions.body).long]}/> */}
-                                Choropleth Comes Here
+                            <div className="m-2 h-full">
+                                {data && !isPending &&
+                                    <CarMap
+                                        cars={data}
+                                        userLoc={[{lat: JSON.parse(apiOptions['body']).lat, lng: JSON.parse(apiOptions.body).long}]}
+                                    />
+                                }
                             </div>
                         </Item>
                     </Grid>
@@ -501,7 +498,7 @@ const MainPage = () => {
                             {isPending && 
                                 <div>Loading</div>
                             }
-                            {data && !isPending && data.map((car: any) => (
+                            {data && !isPending && data.map((car: carData) => (
                                     <Grid
                                         item
                                         xs={6}
@@ -551,31 +548,7 @@ const MainPage = () => {
                                 aria-labelledby="modal-modal-title"
                                 aria-describedby="modal-modal-description"
                             >
-                                <Card sx={modalStyle} elevation={10}>
-                                    <CardHeader
-                                        title={modalData.model}
-                                        subheader={modalData.manufacturer}
-                                    />
-                                    <CardContent>
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                        >
-                                            Condition: {modalData.conditions}
-                                            <br />
-                                            Cylinders: {modalData.cylinders}
-                                            <br />
-                                            Transmission: {modalData.drive}
-                                            <br />
-                                            Mileage: {modalData.odometer} miles
-                                            <br />
-                                            Year: {modalData.year}
-                                            <br />
-                                            Price: {"$"}
-                                            {modalData.price}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
+                                <CarModal initialCar={modalData} />
                             </Modal>
                         )}
                     </Grid>
