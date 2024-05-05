@@ -10,10 +10,10 @@ function App() {
         <Router>
             <div className="min-h-screen">
                 <Nav />
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/searched" element={<MainPage />} />
-                </Routes>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/searched" element={<MainPage />} />
+                    </Routes>
             </div>
         </Router>
     );

@@ -94,7 +94,6 @@ const Home = () => {
                     long: long,
                 }),
             };
-            console.log(options);
             navigate('/searched', {state: options})
         } else {
             alert(
@@ -120,7 +119,6 @@ const Home = () => {
                                 </InputLabel>
                                 <Select
                                     id="make-chip"
-                                    multiple
                                     value={selectedManufacturer}
                                     onChange={handleChange}
                                     input={
@@ -129,22 +127,6 @@ const Home = () => {
                                             label="Chip"
                                         />
                                     }
-                                    renderValue={(selected) => (
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                flexWrap: "wrap",
-                                                gap: 0.5,
-                                            }}
-                                        >
-                                            {selected.map((value) => (
-                                                <Chip
-                                                    key={value}
-                                                    label={value}
-                                                />
-                                            ))}
-                                        </Box>
-                                    )}
                                     MenuProps={MenuProps}
                                 >
                                     {manmodel.map((rec) => (
@@ -159,7 +141,6 @@ const Home = () => {
                             </FormControl>
                             <Autocomplete
                                 freeSolo
-                                multiple
                                 id="model-autocomplete"
                                 disabled={selectedManufacturer.length === 0}
                                 onChange={(event, data): any => {

@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { GoogleMap, InfoWindow, LoadScript, Marker } from "@react-google-maps/api";
+import {
+    GoogleMap,
+    InfoWindow,
+    Marker,
+    useJsApiLoader,
+} from "@react-google-maps/api";
 import { carData } from "../interface/CarData";
 
 interface loc {
@@ -14,6 +19,7 @@ interface MapProps {
 
 const CarMap: React.FC<MapProps> = ({ cars, userLoc }) => {
     const [selectedCar, setSelectedCar] = useState<carData | null>(null);
+    const [map, setMap] = React.useState(null);
 
     useEffect(() => {
         console.log(
@@ -22,12 +28,12 @@ const CarMap: React.FC<MapProps> = ({ cars, userLoc }) => {
             "and location:",
             userLoc
         );
-
-        console.log(cars[0].longi!);
-        console.log(typeof cars[0].longi!);
-        console.log(typeof parseFloat(cars[0].longi!));
-        console.log(parseFloat(cars[0].longi!));
     }, [cars, userLoc]);
+
+    const { isLoaded } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: "<API-KEY-HERE>"
+      })
 
     const mapContainerStyle = {
         width: "100%",
@@ -44,13 +50,18 @@ const CarMap: React.FC<MapProps> = ({ cars, userLoc }) => {
         zoomControl: true,
     };
 
+    const onUnmount = React.useCallback(function callback(map: any) {
+        setMap(null);
+    }, []);
+
     return (
-        <LoadScript googleMapsApiKey="AIzaSyAcdIca-UxrWwNo0bred2Pdqrczh_Bdxug">
+        isLoaded? 
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={defaultCenter}
                 zoom={8}
                 options={options}
+                onUnmount={onUnmount}
             >
                 {cars &&
                     cars.map((car, index) => {
@@ -58,6 +69,7 @@ const CarMap: React.FC<MapProps> = ({ cars, userLoc }) => {
                         const lng = parseFloat(car.longi!);
                         return !isNaN(lat) && !isNaN(lng) ? (
                             <Marker
+                                key={index}
                                 position={{ lat, lng }}
                                 onClick={() => setSelectedCar(car)}
                             >
@@ -81,9 +93,8 @@ const CarMap: React.FC<MapProps> = ({ cars, userLoc }) => {
                             </Marker>
                         ) : null;
                     })}
-            </GoogleMap>
-        </LoadScript>
+            </GoogleMap> : <></>
     );
 };
 
-export default CarMap;
+export default React.memo(CarMap);

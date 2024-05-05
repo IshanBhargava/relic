@@ -47,11 +47,10 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 const MainPage = () => {
-    const apiOptions = useLocation().state
+    const apiOptions = useLocation().state;
 
-    const  [data, setData] = useState<carData[]>();
-    const  [isPending, setIsPending] = useState<Boolean>(true);
-
+    const [data, setData] = useState<carData[]>();
+    const [isPending, setIsPending] = useState<Boolean>(true);
 
     const [manmodel, setManmodel] = useState<manu_model[]>([]);
     const [selectedManufacturer, setSelectedManufacturer] = useState<string[]>(
@@ -74,9 +73,7 @@ const MainPage = () => {
 
     const dist_range = ["50", "100", "150"];
 
-    
     useEffect(() => {
-        console.log('apiOptions', apiOptions)
         fetch("http://127.0.0.1:5000/getcars", apiOptions)
             .then((res) => {
                 if (!res.ok) {
@@ -85,9 +82,9 @@ const MainPage = () => {
                 return res.json();
             })
             .then((d) => {
-                setData(d)
-                setIsPending(false)
-            })
+                setData(d);
+                setIsPending(false);
+            });
 
         setManmodel(manModelData!["manumodel"]);
     }, [apiOptions]);
@@ -99,6 +96,7 @@ const MainPage = () => {
         setSelectedManufacturer(
             typeof value === "string" ? value.split(",") : value
         );
+        console.log('Inside handlechange')
         handleAvailableModels(value);
     };
 
@@ -114,7 +112,7 @@ const MainPage = () => {
     };
 
     const handleModelChange = (event: any, data: any) => {
-        setSelectedModel(typeof data === "string" ? data.split(",") : data)
+        setSelectedModel(typeof data === "string" ? data.split(",") : data);
     };
 
     const handleMenuChange = (menu: string) => {
@@ -158,21 +156,21 @@ const MainPage = () => {
                     long: JSON.parse(apiOptions["body"]).long,
                     price: price,
                     year: year,
-                    mileage: mileage
+                    mileage: mileage,
                 }),
             };
-            setIsPending(true)
+            setIsPending(true);
             fetch("http://127.0.0.1:5000/getcarsmain", options)
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error("Could not retreive data");
-                }
-                return res.json();
-            })
-            .then((d) => {
-                setData(d)
-                setIsPending(false)
-            })
+                .then((res) => {
+                    if (!res.ok) {
+                        throw new Error("Could not retreive data");
+                    }
+                    return res.json();
+                })
+                .then((d) => {
+                    setData(d);
+                    setIsPending(false);
+                });
         } else {
             alert(
                 "Please select atleast one Make and a distance range before searching."
@@ -202,7 +200,6 @@ const MainPage = () => {
                                     </InputLabel>
                                     <Select
                                         id="make-chip"
-                                        multiple
                                         value={selectedManufacturer}
                                         onChange={handleChange}
                                         input={
@@ -245,12 +242,11 @@ const MainPage = () => {
                             <Item sx={{ m: 1, width: 200 }}>
                                 <Autocomplete
                                     freeSolo
-                                    multiple
                                     disableClearable
                                     id="model-autocomplete"
                                     disabled={selectedManufacturer.length === 0}
                                     onChange={(event, data): any => {
-                                        handleModelChange(event, data)
+                                        handleModelChange(event, data);
                                     }}
                                     sx={{ width: 200 }}
                                     className="bg-white"
@@ -480,25 +476,35 @@ const MainPage = () => {
                 </div>
             </div>
             <div id="page-content" className="mt-1">
-            <Grid container columns={16}>
+                {
+                    data?.length !== 0 ? (
+                        <Grid container columns={16}>
                     <Grid xs={8} sx={{ height: "full" }}>
                         <Item>
                             <div className="m-2 h-full">
-                                {data && !isPending &&
+                                {data && !isPending && (
                                     <CarMap
                                         cars={data}
-                                        userLoc={[{lat: JSON.parse(apiOptions['body']).lat, lng: JSON.parse(apiOptions.body).long}]}
+                                        userLoc={[
+                                            {
+                                                lat: JSON.parse(
+                                                    apiOptions["body"]
+                                                ).lat,
+                                                lng: JSON.parse(apiOptions.body)
+                                                    .long,
+                                            },
+                                        ]}
                                     />
-                                }
+                                )}
                             </div>
                         </Item>
                     </Grid>
                     <Grid xs={8} sx={{ overflow: "auto", height: "full" }}>
                         <Grid container>
-                            {isPending && 
-                                <div>Loading</div>
-                            }
-                            {data && !isPending && data.map((car: carData) => (
+                            {isPending && <div>Loading</div>}
+                            {data &&
+                                !isPending &&
+                                data.map((car: carData) => (
                                     <Grid
                                         item
                                         xs={6}
@@ -553,6 +559,9 @@ const MainPage = () => {
                         )}
                     </Grid>
                 </Grid>
+                    ) : <div>Oops! no cars found. Try changing the search parameters.
+                    </div>
+                }
             </div>
         </div>
     );

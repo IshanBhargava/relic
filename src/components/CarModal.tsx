@@ -37,7 +37,6 @@ const CarModal: React.FC<ModalProps> = ({ initialCar }) => {
 
     const fetchSimilarCars = (current_car: carData) => {
         setIsLoading(true);
-        console.log("1",isLoading)
 
         const options = {
             method: "PUT",
@@ -59,18 +58,14 @@ const CarModal: React.FC<ModalProps> = ({ initialCar }) => {
                 return res.json();
             })
             .then((d) => {
-                console.log("car", current_car);
-                console.log("d", d);
                 setData({
                     car: current_car,
                     similar: d,
                 });
                 setIsLoading(false);
-                console.log("2",isLoading)
             })
             .catch(() => {
                 setIsLoading(false);
-                console.log("3",isLoading)
             });
     };
 
